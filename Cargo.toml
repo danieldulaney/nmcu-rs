@@ -1,0 +1,9 @@
+[package]
+name = "nmcu"
+version = "0.1.0"
+authors = ["Daniel Dulaney <dulaney.daniel@gmail.com>"]
+
+[dependencies]
+mio-serial = "0.8"
+mio = "0.6"
+nix = "0.10"
