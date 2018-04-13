@@ -7,9 +7,9 @@ use mio_serial::{Serial, SerialPortSettings};
 
 #[derive(Debug)]
 pub struct Response {
-    stdout: Option<Box<[u8]>>,
-    serial: Option<Box<[u8]>>,
-    terminate: bool,
+    pub stdout: Option<Box<[u8]>>,
+    pub serial: Option<Box<[u8]>>,
+    pub terminate: bool,
 }
 
 impl Response {
