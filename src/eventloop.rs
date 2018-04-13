@@ -53,11 +53,11 @@ pub trait Recieve {
         Response::none()
     }
 
-    fn recieve_stdin(&mut self, line: String) -> Result<Response> {
+    fn recieve_stdin(&mut self, _line: String) -> Result<Response> {
         Ok(Response::none())
     }
 
-    fn recieve_serial(&mut self, payload: Vec<u8>) -> Result<Response> {
+    fn recieve_serial(&mut self, _payload: Vec<u8>) -> Result<Response> {
         Ok(Response::none())
     }
 
@@ -93,65 +93,76 @@ pub fn run(
     let mut events = Events::with_capacity(1024);
 
     // Dispatch this *before* the loop
-    reciever.startup();
+    let startup_response = reciever.startup();
 
-    loop {
-        poll.poll(&mut events, None).unwrap();
+    write_response(&startup_response, &mut serial);
 
-        for event in events.iter() {
-            // Read in the event and dispatch it to the Reciever, storing the response
-            let response = match (event.token(), event.readiness()) {
-                (STDIN_TOKEN, r) if r.is_readable() => {
-                    // This assumes that get a line at a time from stdin
-                    let mut line = String::new();
-                    io::stdin().read_line(&mut line)?;
+    if !startup_response.terminate {
+        'main: loop {
+            poll.poll(&mut events, None).unwrap();
 
-                    // Dispatch it to the receiver
-                    reciever.recieve_stdin(line)?
+            for event in events.iter() {
+                // Read in the event and dispatch it to the Reciever, storing the response
+                let response = match (event.token(), event.readiness()) {
+                    (STDIN_TOKEN, r) if r.is_readable() => {
+                        // This assumes that get a line at a time from stdin
+                        let mut line = String::new();
+                        io::stdin().read_line(&mut line)?;
+
+                        // Dispatch it to the receiver
+                        reciever.recieve_stdin(line)?
+                    }
+                    (SERIAL_TOKEN, r) if r.is_readable() => {
+                        let mut buffer = Vec::new();
+
+                        // Ignore return value and WouldBlock errors
+                        // WouldBlock is returned when we run out of input, which is normal
+                        match serial.read_to_end(&mut buffer) {
+                            Ok(_) => {}
+                            Err(ref e) if e.kind() == WouldBlock => {}
+                            r => {
+                                r?;
+                            }
+                        };
+
+                        // Dispatch it to the receiver
+                        reciever.recieve_serial(buffer)?
+                    }
+                    _ => {
+                        // Spurious events are probably possible in some edge cases
+                        eprintln!("Unrecognized event {:?}", event);
+                        Response::none()
+                    }
+                };
+
+                write_response(&response, &mut serial)?;
+
+                if response.terminate {
+                    eprintln!("Terminating");
+                    break 'main;
                 }
-                (SERIAL_TOKEN, r) if r.is_readable() => {
-                    let mut buffer = Vec::new();
-
-                    // Ignore return value and WouldBlock errors
-                    // WouldBlock is returned when we run out of input, which is normal
-                    match serial.read_to_end(&mut buffer) {
-                        Ok(_) => {}
-                        Err(ref e) if e.kind() == WouldBlock => {}
-                        r => {
-                            r?;
-                        }
-                    };
-
-                    // Dispatch it to the receiver
-                    reciever.recieve_serial(buffer)?
-                }
-                _ => {
-                    // Spurious events are probably possible in some edge cases
-                    eprintln!("Unrecognized event {:?}", event);
-                    Response::none()
-                }
-            };
-
-            // IO flushing here is super important to keep everything in sync
-            if let Some(b) = response.stdout {
-                io::stdout().write(&b).unwrap();
-                io::stdout().flush().unwrap();
-            }
-
-            if let Some(b) = response.serial {
-                serial.write(&b)?;
-                serial.flush()?;
-            }
-
-            if response.terminate {
-                break;
             }
         }
     }
 
     // Dispatch this *after* the loop
-    reciever.shutdown();
+    write_response(&reciever.shutdown(), &mut serial);
 
     // Just return void, but without any errors!
+    Ok(())
+}
+
+fn write_response(response: &Response, serial: &mut Serial) -> Result<()> {
+    // IO flushing here is super important to keep everything in sync
+    if let Some(ref b) = response.stdout {
+        io::stdout().write(b).unwrap();
+        io::stdout().flush().unwrap();
+    }
+
+    if let Some(ref b) = response.serial {
+        serial.write(b)?;
+        serial.flush()?;
+    }
+
     Ok(())
 }

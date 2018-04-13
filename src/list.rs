@@ -1,8 +1,27 @@
 use errors::*;
 use eventloop::{Recieve, Response};
 
-pub struct List {
-    long_mode: bool,
+struct File {
+    name: String,
+    size: usize,
 }
 
-impl Recieve for List {}
+pub struct List {
+    long_mode: bool,
+    files: Vec<File>,
+}
+
+impl List {
+    pub fn new(long_mode: bool) -> Box<Recieve> {
+        Box::new(List {
+            long_mode,
+            files: Vec::new(),
+        })
+    }
+}
+
+impl Recieve for List {
+    fn startup(&mut self) -> Response {
+        Response::terminate()
+    }
+}

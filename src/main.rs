@@ -60,8 +60,8 @@ fn main() {
         )
         .get_matches();
 
-    let handler = if let Some(matches) = matches.subcommand_matches("list") {
-        unimplemented!("{:?}", matches)
+    let handler: Box<Recieve> = if let Some(matches) = matches.subcommand_matches("list") {
+        List::new(matches.is_present("long"))
     } else {
         CommandLine::new()
     };

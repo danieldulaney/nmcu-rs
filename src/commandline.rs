@@ -6,7 +6,7 @@ pub struct CommandLine {
 }
 
 impl CommandLine {
-    pub fn new() -> Box<CommandLine> {
+    pub fn new() -> Box<Recieve> {
         Box::new(CommandLine {
             last_line: String::new(),
         })
