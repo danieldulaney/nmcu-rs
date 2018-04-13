@@ -38,13 +38,32 @@ impl Response {
             terminate: false,
         }
     }
+
+    pub fn terminate() -> Response {
+        Response {
+            stdout: None,
+            serial: None,
+            terminate: true,
+        }
+    }
 }
 
 pub trait Recieve {
-    fn startup(&mut self) -> Response;
-    fn recieve_stdin(&mut self, line: String) -> Result<Response>;
-    fn recieve_serial(&mut self, payload: Vec<u8>) -> Result<Response>;
-    fn shutdown(&mut self) -> Response;
+    fn startup(&mut self) -> Response {
+        Response::none()
+    }
+
+    fn recieve_stdin(&mut self, line: String) -> Result<Response> {
+        Ok(Response::none())
+    }
+
+    fn recieve_serial(&mut self, payload: Vec<u8>) -> Result<Response> {
+        Ok(Response::none())
+    }
+
+    fn shutdown(&mut self) -> Response {
+        Response::none()
+    }
 }
 
 const STDIN_TOKEN: Token = Token(0);

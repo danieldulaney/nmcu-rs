@@ -9,10 +9,12 @@ extern crate mio_serial;
 pub mod errors;
 pub mod eventloop;
 pub mod commandline;
+pub mod list;
 
 pub use errors::*;
 pub use eventloop::{Recieve, Response};
 use commandline::CommandLine;
+use list::List;
 
 use std::time::Duration;
 

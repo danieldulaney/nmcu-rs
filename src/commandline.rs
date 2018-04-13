@@ -14,10 +14,6 @@ impl CommandLine {
 }
 
 impl Recieve for CommandLine {
-    fn startup(&mut self) -> Response {
-        Response::none()
-    }
-
     fn recieve_stdin(&mut self, line: String) -> Result<Response> {
         self.last_line = line;
 
@@ -73,9 +69,5 @@ impl Recieve for CommandLine {
                 .collect::<Vec<u8>>()
                 .into_boxed_slice(),
         ))
-    }
-
-    fn shutdown(&mut self) -> Response {
-        Response::none()
     }
 }
