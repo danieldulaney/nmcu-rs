@@ -23,7 +23,7 @@ This is still a work in progress. Here are some prospective features:
 
 - [X] Simple two-way communication over serial
 - [X] Full interactive console session
-- [ ] Command line arguments and subcommands
+- [X] Command line arguments and subcommands
 - [ ] List files
 - [ ] Upload files
 - [ ] Download files
