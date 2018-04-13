@@ -6,4 +6,4 @@ authors = ["Daniel Dulaney <dulaney.daniel@gmail.com>"]
 [dependencies]
 mio-serial = "0.8"
 mio = "0.6"
-nix = "0.10"
+clap = "2.31"
