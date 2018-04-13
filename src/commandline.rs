@@ -1,3 +1,4 @@
+use errors::*;
 use eventloop::{Recieve, Response};
 
 pub struct CommandLine {
@@ -17,7 +18,7 @@ impl Recieve for CommandLine {
         Response::none()
     }
 
-    fn recieve_stdin(&mut self, line: String) -> Result<Response, ()> {
+    fn recieve_stdin(&mut self, line: String) -> Result<Response> {
         self.last_line = line;
 
         Ok(Response::to_serial(
@@ -28,7 +29,7 @@ impl Recieve for CommandLine {
         ))
     }
 
-    fn recieve_serial(&mut self, payload: Vec<u8>) -> Result<Response, ()> {
+    fn recieve_serial(&mut self, payload: Vec<u8>) -> Result<Response> {
         let mut line_index = 0;
         let mut payload_index = 0;
 

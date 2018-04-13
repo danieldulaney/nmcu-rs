@@ -1,11 +1,15 @@
 //! A serial interface for the NodeMCU firmware on ESP8266 boards.
 
+#[macro_use]
+extern crate error_chain;
 extern crate mio;
 extern crate mio_serial;
 
+pub mod errors;
 pub mod eventloop;
 pub mod commandline;
 
+pub use errors::*;
 pub use eventloop::{Recieve, Response};
 
 use std::time::Duration;
@@ -22,5 +26,5 @@ const DEFAULTS: SerialPortSettings = SerialPortSettings {
 };
 
 fn main() {
-    eventloop::run(commandline::CommandLine::new(), &DEFAULTS);
+    eventloop::run(commandline::CommandLine::new(), "/dev/ttyS0", &DEFAULTS).unwrap();
 }
