@@ -9,8 +9,8 @@ use mio_serial::{Serial, SerialPortSettings};
 
 #[derive(Debug)]
 pub struct Response {
-    pub stdout: Option<Box<[u8]>>,
-    pub serial: Option<Box<[u8]>>,
+    pub stdout: Option<Vec<u8>>,
+    pub serial: Option<Vec<u8>>,
     pub terminate: bool,
 }
 
@@ -23,7 +23,7 @@ impl Response {
         }
     }
 
-    pub fn to_stdout(b: Box<[u8]>) -> Response {
+    pub fn to_stdout(b: Vec<u8>) -> Response {
         Response {
             stdout: Some(b),
             serial: None,
@@ -31,7 +31,7 @@ impl Response {
         }
     }
 
-    pub fn to_serial(b: Box<[u8]>) -> Response {
+    pub fn to_serial(b: Vec<u8>) -> Response {
         Response {
             stdout: None,
             serial: Some(b),

@@ -18,10 +18,7 @@ impl Recieve for CommandLine {
         self.last_line = line;
 
         Ok(Response::to_serial(
-            self.last_line
-                .bytes()
-                .collect::<Vec<u8>>()
-                .into_boxed_slice(),
+            self.last_line.bytes().collect::<Vec<u8>>(),
         ))
     }
 
@@ -66,8 +63,7 @@ impl Recieve for CommandLine {
                 .iter()
                 .skip(payload_index)
                 .map(|x| *x)
-                .collect::<Vec<u8>>()
-                .into_boxed_slice(),
+                .collect::<Vec<u8>>(),
         ))
     }
 }
