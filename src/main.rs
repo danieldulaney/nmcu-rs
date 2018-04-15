@@ -62,7 +62,7 @@ fn main() {
         .get_matches();
 
     let handler: Box<Recieve> = if let Some(matches) = matches.subcommand_matches("list") {
-        List::new(matches.is_present("long"))
+        echostrip::EchoStrip::new(List::new(matches.is_present("long")))
     } else {
         echostrip::EchoStrip::new(CommandLine::new())
     };

@@ -66,4 +66,12 @@ impl Recieve for EchoStrip {
                 .collect::<Vec<u8>>(),
         )
     }
+
+    fn startup(&mut self) -> Response {
+        self.destination.startup()
+    }
+
+    fn shutdown(&mut self) -> Response {
+        self.destination.shutdown()
+    }
 }
