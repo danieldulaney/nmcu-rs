@@ -95,7 +95,7 @@ pub fn run(
     // Dispatch this *before* the loop
     let startup_response = reciever.startup();
 
-    write_response(&startup_response, &mut serial);
+    write_response(&startup_response, &mut serial)?;
 
     if !startup_response.terminate {
         'main: loop {
@@ -146,7 +146,7 @@ pub fn run(
     }
 
     // Dispatch this *after* the loop
-    write_response(&reciever.shutdown(), &mut serial);
+    write_response(&reciever.shutdown(), &mut serial)?;
 
     // Just return void, but without any errors!
     Ok(())
