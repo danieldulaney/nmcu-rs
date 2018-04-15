@@ -10,6 +10,7 @@ pub mod errors;
 pub mod eventloop;
 pub mod commandline;
 pub mod list;
+pub mod echostrip;
 
 pub use errors::*;
 pub use eventloop::{Recieve, Response};
@@ -63,7 +64,7 @@ fn main() {
     let handler: Box<Recieve> = if let Some(matches) = matches.subcommand_matches("list") {
         List::new(matches.is_present("long"))
     } else {
-        CommandLine::new()
+        echostrip::EchoStrip::new(CommandLine::new())
     };
 
     eventloop::run(handler, "/dev/ttyS0", &DEFAULTS).unwrap();
