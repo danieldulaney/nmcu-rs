@@ -3,23 +3,33 @@ use eventloop::{Recieve, Response};
 
 pub struct EchoStrip {
     destination: Box<Recieve>,
-    last_line: String,
+    last_line: Vec<u8>,
 }
 
 impl EchoStrip {
     pub fn new(destination: Box<Recieve>) -> Box<Recieve> {
         Box::new(EchoStrip {
             destination,
-            last_line: String::new(),
+            last_line: Vec::new(),
         })
+    }
+
+    pub fn save_response(&mut self, response: &Response) {
+        if let Some(ref data) = response.serial {
+            self.last_line = data.clone();
+        }
     }
 }
 
 impl Recieve for EchoStrip {
     fn recieve_stdin(&mut self, line: String) -> Result<Response> {
-        self.last_line = line.clone();
+        let r = self.destination.recieve_stdin(line);
 
-        self.destination.recieve_stdin(line)
+        if let Ok(ref inner) = r {
+            self.save_response(inner);
+        }
+
+        r
     }
 
     fn recieve_serial(&mut self, payload: Vec<u8>) -> Result<Response> {
@@ -27,7 +37,7 @@ impl Recieve for EchoStrip {
         let mut payload_index = 0;
 
         {
-            let line = self.last_line.as_bytes();
+            let line = &self.last_line[..];
 
             loop {
                 if let (Some(&line_cur), Some(&payload_cur)) =
@@ -55,23 +65,37 @@ impl Recieve for EchoStrip {
         }
 
         // You only ever get one chance to match a given line
-        self.last_line = String::new();
+        self.last_line = Vec::new();
 
         // Skip the first payload_index bytes
-        self.destination.recieve_serial(
+        let r = self.destination.recieve_serial(
             payload
                 .iter()
                 .skip(payload_index)
                 .map(|x| *x)
                 .collect::<Vec<u8>>(),
-        )
+        );
+
+        if let Ok(ref inner) = r {
+            self.save_response(inner);
+        }
+
+        r
     }
 
     fn startup(&mut self) -> Response {
-        self.destination.startup()
+        let r = self.destination.startup();
+
+        self.save_response(&r);
+
+        r
     }
 
     fn shutdown(&mut self) -> Response {
-        self.destination.shutdown()
+        let r = self.destination.shutdown();
+
+        self.save_response(&r);
+
+        r
     }
 }

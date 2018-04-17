@@ -1,7 +1,7 @@
 use errors::*;
 use eventloop::{Recieve, Response};
 
-const LIST_FILES: &'static [u8] = b"for k,v in pairs(file.list()) do print(k..\"\x1f\"..v) end";
+const LIST_FILES: &'static [u8] = b"for k,v in pairs(file.list()) do print(k..\"\\031\"..v) end\n";
 
 struct File {
     name: String,
@@ -26,12 +26,14 @@ impl List {
 
 impl Recieve for List {
     fn startup(&mut self) -> Response {
+        eprintln!("List startup");
         let mut v = vec![0; LIST_FILES.len()];
         v.copy_from_slice(LIST_FILES);
         Response::to_serial(v)
     }
 
     fn recieve_serial(&mut self, payload: Vec<u8>) -> Result<Response> {
+        eprintln!("Hi");
         for &b in payload.iter() {
             eprintln!("{:?}", b as char);
         }

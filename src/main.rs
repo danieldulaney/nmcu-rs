@@ -1,8 +1,11 @@
 //! A serial interface for the NodeMCU firmware on ESP8266 boards.
 
 extern crate clap;
+extern crate env_logger;
 #[macro_use]
 extern crate error_chain;
+#[macro_use]
+extern crate log;
 extern crate mio;
 extern crate mio_serial;
 
@@ -33,6 +36,8 @@ const DEFAULTS: SerialPortSettings = SerialPortSettings {
 };
 
 fn main() {
+    env_logger::init_from_env("NMCU_LOG");
+
     let matches = App::new("nmcu")
         .version(env!("CARGO_PKG_VERSION"))
         .author("Daniel Dulaney <dulaney.daniel@gmail.com>")

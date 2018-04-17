@@ -109,6 +109,8 @@ pub fn run(
                         let mut line = String::new();
                         io::stdin().read_line(&mut line)?;
 
+                        trace!("stdin: {:?}", line);
+
                         // Dispatch it to the receiver
                         reciever.recieve_stdin(line)?
                     }
@@ -125,12 +127,14 @@ pub fn run(
                             }
                         };
 
+                        trace!("serial in: {:?}", String::from_utf8_lossy(&buffer));
+
                         // Dispatch it to the receiver
                         reciever.recieve_serial(buffer)?
                     }
                     _ => {
                         // Spurious events are probably possible in some edge cases
-                        eprintln!("Unrecognized event {:?}", event);
+                        error!("Unrecognized event {:?}", event);
                         Response::none()
                     }
                 };
@@ -138,7 +142,7 @@ pub fn run(
                 write_response(&response, &mut serial)?;
 
                 if response.terminate {
-                    eprintln!("Terminating");
+                    debug!("Terminating");
                     break 'main;
                 }
             }
