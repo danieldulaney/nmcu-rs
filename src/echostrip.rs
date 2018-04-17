@@ -19,17 +19,20 @@ impl EchoStrip {
             self.last_line = data.clone();
         }
     }
+
+    pub fn try_save_response(&mut self, response: Result<Response>) -> Result<Response> {
+        if let Ok(ref r) = response {
+            self.save_response(r);
+        }
+
+        response
+    }
 }
 
 impl Recieve for EchoStrip {
     fn recieve_stdin(&mut self, line: String) -> Result<Response> {
         let r = self.destination.recieve_stdin(line);
-
-        if let Ok(ref inner) = r {
-            self.save_response(inner);
-        }
-
-        r
+        self.try_save_response(r)
     }
 
     fn recieve_serial(&mut self, payload: Vec<u8>) -> Result<Response> {
@@ -76,11 +79,7 @@ impl Recieve for EchoStrip {
                 .collect::<Vec<u8>>(),
         );
 
-        if let Ok(ref inner) = r {
-            self.save_response(inner);
-        }
-
-        r
+        self.try_save_response(r)
     }
 
     fn startup(&mut self) -> Response {
