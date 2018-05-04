@@ -11,16 +11,6 @@ static PROMPT: &'static [u8] = b"\r\n> ";
 /// interface will send `\n` until it detects that it has recieved a valid
 /// NodeMCU command line at the end of a response, and only then pass data on
 /// to the child.
-///
-/// # Implementation details
-///
-/// Synch is a state machine with the following states:
-/// - *FirstSynch*: Has never successfully synched; waiting for the first
-///   prompt to appear
-/// - *Nothing*: Has sent no message. Nothing is expected right now.
-/// - *Response*: Has sent a message, expecting a response.
-/// - *AdditionalData*: Has sent a message and got a response, but the response
-///   did not end with a prompt.
 pub struct Synch {
     inner: Box<Recieve>,
     state: WaitingFor,
@@ -40,6 +30,13 @@ impl Synch {
         Box::new(Synch {
             inner,
             state: WaitingFor::FirstSynch,
+        })
+    }
+
+    pub fn start_synched(inner: Box<Recieve>) -> Box<Recieve> {
+        Box::new(Synch {
+            inner,
+            state: WaitingFor::Nothing,
         })
     }
 
@@ -76,38 +73,38 @@ impl Recieve for Synch {
         match (&mut self.state, ends_with(&payload, PROMPT)) {
             (&mut WaitingFor::FirstSynch, false) | (&mut WaitingFor::Synch(_), false) => {
                 Ok(response_endline())
-            },
+            }
 
-            (old_state @ &mut WaitingFor::FirstSynch, true) => {
+            (state @ &mut WaitingFor::FirstSynch, true) => {
                 let resp = self.inner.startup();
-                *old_state = match resp.serial {
+                *state = match resp.serial {
                     Some(_) => WaitingFor::Response,
                     None => WaitingFor::Nothing,
                 };
 
                 Ok(resp)
-            },
+            }
 
-            (old_state @ &mut WaitingFor::Nothing, _) | (old_state @ &mut WaitingFor::Response, true) => {
+            (state @ &mut WaitingFor::Nothing, _) | (state @ &mut WaitingFor::Response, true) => {
                 let r = self.inner.recieve_serial(payload);
 
                 if let Ok(ref resp) = r {
-                    *old_state = match resp.serial {
+                    *state = match resp.serial {
                         Some(_) => WaitingFor::Response,
                         None => WaitingFor::Nothing,
                     };
                 }
 
                 r
-            },
+            }
 
-            (old_state @ &mut WaitingFor::Synch(_), true) => {
+            (state @ &mut WaitingFor::Synch(_), true) => {
                 let mut temp_state = WaitingFor::Invalid;
 
-                mem::swap(old_state, &mut temp_state);
+                mem::swap(state, &mut temp_state);
 
                 if let WaitingFor::Synch(resp) = temp_state {
-                    *old_state = match resp.serial {
+                    *state = match resp.serial {
                         Some(_) => WaitingFor::Response,
                         None => WaitingFor::Nothing,
                     };
@@ -116,19 +113,21 @@ impl Recieve for Synch {
                 } else {
                     unreachable!("temp_state must be WaitingFor::Synch");
                 }
-            },
+            }
 
-            (old_state @ &mut WaitingFor::Response, false) => {
-                *old_state = WaitingFor::Synch(self.inner.recieve_serial(payload)?);
+            (state @ &mut WaitingFor::Response, false) => {
+                *state = WaitingFor::Synch(self.inner.recieve_serial(payload)?);
 
                 Ok(response_endline())
-            },
+            }
 
-            (&mut WaitingFor::Invalid, _) => unreachable!("Synch should never be left in an invalid state"),
+            (&mut WaitingFor::Invalid, _) => {
+                unreachable!("Synch should never be left in an invalid state")
+            }
         }
     }
 
-    fn recieve_stdin(&mut self, payload: String) -> Result<Response> {
+    fn recieve_stdin(&mut self, _payload: String) -> Result<Response> {
         unimplemented!()
     }
 
