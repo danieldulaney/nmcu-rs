@@ -14,11 +14,13 @@ pub mod eventloop;
 pub mod commandline;
 pub mod list;
 pub mod echostrip;
+pub mod synch;
 
 pub use errors::*;
 pub use eventloop::{Recieve, Response};
 use commandline::CommandLine;
 use list::List;
+use synch::Synch;
 
 use std::time::Duration;
 
@@ -69,7 +71,8 @@ fn main() {
     let handler: Box<Recieve> = if let Some(matches) = matches.subcommand_matches("list") {
         echostrip::EchoStrip::new(List::new(matches.is_present("long")))
     } else {
-        echostrip::EchoStrip::new(CommandLine::new())
+        //echostrip::EchoStrip::new(CommandLine::new())
+        Synch::new(CommandLine::new())
     };
 
     eventloop::run(handler, "/dev/ttyS0", &DEFAULTS).unwrap();
